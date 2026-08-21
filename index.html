@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>I MIG Field Day Scoreboard</title>
+    <style>
+        :root {
+            --usmc-red: #990000;
+            --usmc-red-dark: #7a0000;
+            --usmc-gold: #FFCC00;
+            --usmc-gold-dark: #cca300;
+            --charcoal: #1E1E1E;
+            --dark-bg: #121212;
+            --light-bg: #F4F5F7;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E1E1E;
+            --text-secondary: #666666;
+            --border-color: #E2E8F0;
+            --success: #38A169;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--usmc-red-dark), var(--usmc-red));
+            color: white;
+            padding: 18px 16px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 3px solid var(--usmc-gold);
+        }
+
+        .header-sub {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--usmc-gold);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        main {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: 90px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--charcoal);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--light-bg);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .team-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .team-row:nth-child(1) {
+            border-left: 5px solid gold;
+            background: linear-gradient(90deg, #FFFDF0, #FFFFFF);
+        }
+        .team-row:nth-child(2) {
+            border-left: 5px solid #C0C0C0;
+            background: linear-gradient(90deg, #F8F9FA, #FFFFFF);
+        }
+        .team-row:nth-child(3) {
+            border-left: 5px solid #CD7F32;
+            background: linear-gradient(90deg, #FAF4F0, #FFFFFF);
+        }
+
+        .rank-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.95rem;
+            margin-right: 12px;
+            background: #E2E8F0;
+            color: #4A5568;
+        }
+
+        .team-row:nth-child(1) .rank-badge {
+            background: gold;
+            color: #744210;
+        }
+        .team-row:nth-child(2) .rank-badge {
+            background: #E2E8F0;
+            color: #4A5568;
+        }
+        .team-row:nth-child(3) .rank-badge {
+            background: #EDC9AF;
+            color: #7B3F00;
+        }
+
+        .team-info {
+            flex: 1;
+        }
+
+        .team-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--charcoal);
+        }
+
+        .team-score-summary {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .team-total-points {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--usmc-red);
+            text-align: right;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: var(--light-bg);
+            border-radius: 4px;
+            height: 6px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--usmc-red), var(--usmc-gold));
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .matrix-table th, .matrix-table td {
+            padding: 10px 6px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            min-width: 60px;
+        }
+
+        .matrix-table th {
+            font-weight: 700;
+            color: var(--text-secondary);
+            background-color: var(--light-bg);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .matrix-table td.team-cell {
+            text-align: left;
+            font-weight: 700;
+            color: var(--charcoal);
+            min-width: 100px;
+            position: sticky;
+            left: 0;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .matrix-table td.total-cell {
+            font-weight: 800;
+            color: var(--usmc-red);
+            font-size: 0.9rem;
+            min-width: 65px;
+            background-color: white;
+            position: sticky;
+            right: 0;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .matrix-table th.sticky-header-left {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: var(--light-bg);
+        }
+
+        .matrix-table th.sticky-header-right {
+            position: sticky;
+            right: 0;
+            z-index: 20;
+            background-color: var(--light-bg);
+        }
+
+        .admin-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .lock-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .lock-badge.locked {
+            background-color: #FED7D7;
+            color: #9B2C2C;
+        }
+
+        .lock-badge.unlocked {
+            background-color: #C6F6D5;
+            color: #22543D;
+        }
+
+        .score-modifier-card {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #FAFBFD;
+        }
+
+        .modifier-team-title {
+            font-weight: 700;
+            color: var(--usmc-red);
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            border-left: 3px solid var(--usmc-gold);
+            padding-left: 6px;
+        }
+
+        .modifier-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .modifier-row:last-child {
+            border-bottom: none;
+        }
+
+        .event-label {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            flex: 1;
+            padding-right: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-control {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: none;
+            background: white;
+            color: var(--charcoal);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .btn-control:active {
+            transform: scale(0.9);
+            background-color: var(--light-bg);
+        }
+
+        .btn-control.plus {
+            background: var(--usmc-red);
+            color: white;
+            border-color: var(--usmc-red);
+        }
+
+        .btn-control.plus:active {
+            background-color: var(--usmc-red-dark);
+        }
+
+        .btn-control:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .score-value-display {
+            font-size: 1.1rem;
+            font-weight: 800;
+            width: 36px;
+            text-align: center;
+        }
+
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            gap: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .tab-btn.active {
+            color: var(--usmc-red);
+        }
+
+        .tab-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            transition: transform 0.2s ease;
+        }
+
+        .tab-btn.active svg {
+            transform: translateY(-2px);
+        }
+
+        .reset-btn-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        .btn-reset {
+            background-color: #ED8936;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-reset:active {
+            transform: scale(0.98);
+            background-color: #DD6B20;
+        }
+
+        .btn-reset svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .btn-change-pass {
+            background-color: #4A5568;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        footer.credits-footer {
+            margin-top: 32px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        footer.credits-footer strong {
+            color: var(--charcoal);
+            font-weight: 600;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px 16px;
+            position: fixed;
+            z-index: 200;
+            left: 50%;
+            bottom: 85px;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: visibility 0s, opacity 0.3s linear;
+            opacity: 0;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-sub">I MEF Information Group</div>
+        <h1>I MIG FIELD DAY SCOREBOARD</h1>
+    </header>
+
+    <main>
+        <div id="leaderboard" class="tab-content active">
+            <div class="card">
+                <div class="card-title">
+                    <span>🏆 OVERALL LEADERBOARD</span>
+                    <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal;">Live Updates</span>
+                </div>
+                <div id="leaderboard-list"></div>
+            </div>
+            
+            <div class="card" style="background: linear-gradient(135deg, #1E1E1E, #2D3748); color: white; border: none;">
+                <h3 style="color: var(--usmc-gold); margin-bottom: 8px; font-size: 1rem; font-weight: 700;">🎖️ MOTIVATIONAL STATEMENT</h3>
+                <p style="font-size: 0.85rem; line-height: 1.4; color: #E2E8F0; font-style: italic;">
+                    "The harder the conflict, the more glorious the triumph. Pain is weakness leaving the body. Keep pushing, Marines of I MIG!"
+                </p>
+            </div>
+        </div>
+
+        <div id="matrix" class="tab-content">
+            <div class="card" style="overflow-x: auto; padding: 12px 4px;">
+                <div class="card-title" style="padding: 0 8px 6px 8px;">
+                    <span>📊 EVENT MATRIX</span>
+                </div>
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th class="sticky-header-left" style="text-align: left;">Team</th>
+                            <th>Chess</th>
+                            <th>Pull-Up</th>
+                            <th>7-Ton</th>
+                            <th>CASEVAC</th>
+                            <th>Tire-Flip</th>
+                            <th>O-Course</th>
+                            <th>Ammo Can</th>
+                            <th>Grappling</th>
+                            <th>Tug of War</th>
+                            <th>PT Chall</th>
+                            <th>Cornhole</th>
+                            <th class="sticky-header-right" style="color: var(--usmc-red);">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrix-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin" class="tab-content">
+            <div class="card">
+                <div class="admin-section-header">
+                    <span style="font-weight: 800; font-size: 1.1rem; color: var(--charcoal);">⚙️ SCORE CONTROLLER</span>
+                    <div id="lock-toggle" class="lock-badge unlocked" onclick="toggleLock()">
+                        <span id="lock-icon">🔓</span> <span id="lock-text">UNLOCKED</span>
+                    </div>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.3;">
+                    This scoreboard controller tab is strictly restricted to authenticated Master Referees. Tap the lock icon to lock scores and close editing.
+                </p>
+                <div id="admin-controls-list"></div>
+
+                <div class="reset-btn-container">
+                    <button class="btn-change-pass" onclick="changePasscode()">
+                        🔑 CHANGE REFEREE PASSCODE
+                    </button>
+                    <button class="btn-reset" onclick="resetScoresConfirmation()">
+                        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                        RESET TO DEFAULTS (0 PTS)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="credits-footer">
+            <div>Created by: <strong>1stLt Alexander A. Retz, 1st Intelligence Battalion</strong></div>
+            <div>Last Updated: <strong>08/20/2026</strong></div>
+        </footer>
+    </main>
+
+    <div class="tab-bar">
+        <button id="btn-tab-leaderboard" class="tab-btn active" onclick="switchTab('leaderboard', this)">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v3c0 2.44 1.72 4.44 4 4.88V18c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-3.12c2.28-.44 4-2.44 4-4.88V7c0-1.1-.9-2-2-2zM5 10V7h2v3H5zm14 0h-2V7h2v3z"/>
+            </svg>
+            LEADERBOARD
+        </button>
+        <button id="btn-tab-matrix" class="tab-btn" onclick="switchTab('matrix', this)">
+            <svg viewBox="0 0 24 24">
+                <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/>
+            </svg>
+            EVENT MATRIX
+        </button>
+        <button id="btn-tab-admin" class="tab-btn" onclick="tryAccessController(this)">
+            <svg viewBox="0 0 24 24">
+                <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+            </svg>
+            CONTROLLER
+        </button>
+    </div>
+
+    <div id="toast">Score updated successfully!</div>
+
+    <script>
+        const DEFAULT_TEAMS = [
+            { id: '1stintel', name: '1st Intel Bn', mascot: 'ORACLE' },
+            { id: '1stradio', name: '1st Radio Bn', mascot: 'Sentinels' },
+            { id: '9thcomm', name: '9th Comm Bn', mascot: 'Shadows' },
+            { id: '1stanglico', name: '1st ANGLICO', mascot: 'Lightning' },
+            { id: '1stmsb', name: '1st MSB', mascot: 'Gladiators' },
+            { id: 'imighq', name: 'I MIG HQ', mascot: 'Command' }
+        ];
+
+        const EVENTS = [
+            { id: 'chess', name: 'Chess Tournament', short: 'Chess', maxScore: 100 },
+            { id: 'pullups', name: 'Pull-Up Competition', short: 'Pull-Up', maxScore: 100 },
+            { id: 'tonpull', name: '7-Ton Pull', short: '7-Ton', maxScore: 100 },
+            { id: 'casevac', name: 'CASEVAC Run', short: 'CASEVAC', maxScore: 100 },
+            { id: 'tireflip', name: 'Tire-Flip Race', short: 'Tire-Flip', maxScore: 100 },
+            { id: 'ocourse', name: 'Obstacle Course Race', short: 'O-Course', maxScore: 100 },
+            { id: 'ammocan', name: 'Ammo Can Relay (w/240 DISS/ASS)', short: 'Ammo Can', maxScore: 100 },
+            { id: 'grappling', name: 'Grappling/Pugil Sticks', short: 'Grappling', maxScore: 100 },
+            { id: 'tugofwar', name: 'Tug of War', short: 'Tug of War', maxScore: 100 },
+            { id: 'ptchallenge', name: 'PT Challenge', short: 'PT Chall', maxScore: 100 },
+            { id: 'cornhole', name: 'Cornhole Tournament', short: 'Cornhole', maxScore: 100 }
+        ];
+
+        const DEFAULT_SCORES = {
+            '1stintel': { 'chess': 0, 'pullups': 0, 'tonpull': 0, 'casevac': 0, 'tireflip': 0, 'ocourse': 0, 'ammocan': 0, 'grappling': 0, 'tugofwar': 0, 'ptchallenge': 0, 'cornhole': 0 },
+            '1stradio': { 'chess': 0, 'pullups': 0, 'tonpull': 0, 'casevac': 0, 'tireflip': 0, 'ocourse': 0, 'ammocan': 0, 'grappling': 0, 'tugofwar': 0, 'ptchallenge': 0, 'cornhole': 0 },
+            '9thcomm': { 'chess': 0, 'pullups': 0, 'tonpull': 0, 'casevac': 0, 'tireflip': 0, 'ocourse': 0, 'ammocan': 0, 'grappling': 0, 'tugofwar': 0, 'ptchallenge': 0, 'cornhole': 0 },
+            '1stanglico': { 'chess': 0, 'pullups': 0, 'tonpull': 0, 'casevac': 0, 'tireflip': 0, 'ocourse': 0, 'ammocan': 0, 'grappling': 0, 'tugofwar': 0, 'ptchallenge': 0, 'cornhole': 0 },
+            '1stmsb': { 'chess': 0, 'pullups': 0, 'tonpull': 0, 'casevac': 0, 'tireflip': 0, 'ocourse': 0, 'ammocan': 0, 'grappling': 0, 'tugofwar': 0, 'ptchallenge': 0, 'cornhole': 0 },
+            'imighq': { 'chess': 0, 'pullups': 0, 'tonpull': 0, 'casevac': 0, 'tireflip': 0, 'ocourse': 0, 'ammocan': 0, 'grappling': 0, 'tugofwar': 0, 'ptchallenge': 0, 'cornhole': 0 }
+        };
+
+        let scores = {};
+        let isAdminUnlocked = false; 
+        let refereePasscode = "1775";
+
+        function initApp() {
+            const savedScores = localStorage.getItem('usmc_fieldday_scores');
+            if (savedScores) {
+                scores = JSON.parse(savedScores);
+            } else {
+                scores = JSON.parse(JSON.stringify(DEFAULT_SCORES));
+                saveToLocalStorage();
+            }
+
+            const savedPass = localStorage.getItem('referee_passcode');
+            if (savedPass) {
+                refereePasscode = savedPass;
+            } else {
+                localStorage.setItem('referee_passcode', refereePasscode);
+            }
+
+            renderAll();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('usmc_fieldday_scores', JSON.stringify(scores));
+        }
+
+        function getTeamTotalScore(teamId) {
+            let total = 0;
+            EVENTS.forEach(event => {
+                total += (scores[teamId] && scores[teamId][event.id]) ? scores[teamId][event.id] : 0;
+            });
+            return total;
+        }
+
+        function renderAll() {
+            renderLeaderboard();
+            renderMatrix();
+            renderAdminControls();
+        }
+
+        function renderLeaderboard() {
+            const listContainer = document.getElementById('leaderboard-list');
+            listContainer.innerHTML = '';
+
+            const standings = DEFAULT_TEAMS.map(team => {
+                const totalScore = getTeamTotalScore(team.id);
+                return {
+                    ...team,
+                    totalScore: totalScore
+                };
+            });
+
+            standings.sort((a, b) => b.totalScore - a.totalScore);
+            const maxPointsPossible = EVENTS.length * 100;
+
+            standings.forEach((team, index) => {
+                const rank = index + 1;
+                const progressPercent = maxPointsPossible > 0 ? Math.min(100, Math.round((team.totalScore / maxPointsPossible) * 100)) : 0;
+                
+                let rankDisplay = rank;
+                if (rank === 1) rankDisplay = '🥇';
+                else if (rank === 2) rankDisplay = '🥈';
+                else if (rank === 3) rankDisplay = '🥉';
+
+                const teamRowHtml = `
+                    <div class="team-row">
+                        <div class="rank-badge">${rankDisplay}</div>
+                        <div class="team-info">
+                            <div class="team-name">${team.name} <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-secondary);">(${team.mascot})</span></div>
+                            <div class="team-score-summary">Avg Event Score: ${Math.round(team.totalScore / EVENTS.length)} pts</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: ${progressPercent || 2}%"></div>
+                            </div>
+                        </div>
+                        <div class="team-total-points">
+                            ${team.totalScore}
+                            <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: normal; margin-top: 2px;">TOTAL PTS</div>
+                        </div>
+                    </div>
+                `;
+                listContainer.innerHTML += teamRowHtml;
+            });
+        }
+
+        function renderMatrix() {
+            const matrixBody = document.getElementById('matrix-body');
+            matrixBody.innerHTML = '';
+
+            DEFAULT_TEAMS.forEach(team => {
+                let rowHtml = `<tr><td class="team-cell">${team.name}</td>`;
+                EVENTS.forEach(event => {
+                    const score = (scores[team.id] && scores[team.id][event.id]) ? scores[team.id][event.id] : 0;
+                    rowHtml += `<td>${score}</td>`;
+                });
+                rowHtml += `<td class="total-cell">${getTeamTotalScore(team.id)}</td></tr>`;
+                matrixBody.innerHTML += rowHtml;
+            });
+        }
+
+        function renderAdminControls() {
+            const controlsContainer = document.getElementById('admin-controls-list');
+            controlsContainer.innerHTML = '';
+
+            DEFAULT_TEAMS.forEach(team => {
+                let cardHtml = `
+                    <div class="score-modifier-card">
+                        <div class="modifier-team-title">${team.name}</div>
+                `;
+
+                EVENTS.forEach(event => {
+                    const score = (scores[team.id] && scores[team.id][event.id]) ? scores[team.id][event.id] : 0;
+                    cardHtml += `
+                        <div class="modifier-row">
+                            <span class="event-label">${event.name}</span>
+                            <div class="control-group">
+                                <button class="btn-control minus" ${!isAdminUnlocked ? 'disabled' : ''} onclick="adjustScore('${team.id}', '${event.id}', -1)">−</button>
+                                <span class="score-value-display">${score}</span>
+                                <button class="btn-control plus" ${!isAdminUnlocked ? 'disabled' : ''} onclick="adjustScore('${team.id}', '${event.id}', 1)">+</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                cardHtml += `</div>`;
+                controlsContainer.innerHTML += cardHtml;
+            });
+        }
+
+        function switchTab(tabId, element) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function tryAccessController(element) {
+            if (isAdminUnlocked) {
+                switchTab('admin', element);
+                return;
+            }
+
+            const entered = prompt("🔑 Restricted: Enter Master Referee Passcode to access Controller Tab");
+            if (entered === refereePasscode) {
+                isAdminUnlocked = true;
+                updateLockUI(true);
+                switchTab('admin', element);
+                showToast("🔓 Access Granted. Referee Dashboard Active.");
+            } else if (entered !== null) {
+                showToast("❌ Incorrect Referee Passcode. Access Denied.");
+            }
+        }
+
+        function toggleLock() {
+            isAdminUnlocked = false;
+            updateLockUI(false);
+            showToast("Scores Locked. Exiting Referee Controls.");
+            
+            const leadBtn = document.getElementById('btn-tab-leaderboard');
+            switchTab('leaderboard', leadBtn);
+        }
+
+        function updateLockUI(isUnlocked) {
+            const lockToggle = document.getElementById('lock-toggle');
+            const lockIcon = document.getElementById('lock-icon');
+            const lockText = document.getElementById('lock-text');
+
+            if (isUnlocked) {
+                lockToggle.className = 'lock-badge unlocked';
+                lockIcon.textContent = '🔓';
+                lockText.textContent = 'UNLOCKED';
+            } else {
+                lockToggle.className = 'lock-badge locked';
+                lockIcon.textContent = '🔒';
+                lockText.textContent = 'LOCKED';
+            }
+            renderAdminControls();
+        }
+
+        function changePasscode() {
+            const current = prompt("🔒 Enter CURRENT Master Passcode to verify identity:");
+            if (current === refereePasscode) {
+                const newPass = prompt("🔑 Enter NEW Master Referee Passcode:");
+                if (newPass && newPass.trim().length > 0) {
+                    refereePasscode = newPass.trim();
+                    localStorage.setItem('referee_passcode', refereePasscode);
+                    showToast("Master Referee Passcode updated successfully.");
+                } else if (newPass !== null) {
+                    showToast("Passcode cannot be empty.");
+                }
+            } else if (current !== null) {
+                showToast("❌ Incorrect current passcode. Passcode not modified.");
+            }
+        }
+
+        function adjustScore(teamId, eventId, amount) {
+            if (!isAdminUnlocked) return;
+            
+            if (!scores[teamId]) scores[teamId] = {};
+            let current = scores[teamId][eventId] || 0;
+            let nextScore = current + amount;
+
+            if (nextScore < 0) nextScore = 0;
+            if (nextScore > 100) nextScore = 100;
+
+            scores[teamId][eventId] = nextScore;
+            saveToLocalStorage();
+            
+            renderAll();
+            showToast(`Updated ${DEFAULT_TEAMS.find(t=>t.id===teamId).name} - ${EVENTS.find(e=>e.id===eventId).name}`);
+        }
+
+        document.getElementById('toast');
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show';
+            toast.classList.add('show');
+            
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        function resetScoresConfirmation() {
+            if (!isAdminUnlocked) {
+                showToast("🔒 Authentication needed before resetting.");
+                return;
+            }
+            if (confirm("⚠️ RESET ENTIRE SCOREBOARD? This will wipe all current tournament scores back to 0 points. This cannot be undone.")) {
+                scores = JSON.parse(JSON.stringify(DEFAULT_SCORES));
+                saveToLocalStorage();
+                renderAll();
+                showToast("Tournament scoreboard reset to 0 points.");
+            }
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
+
+
